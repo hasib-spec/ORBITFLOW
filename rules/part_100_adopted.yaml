@@ -1,0 +1,393 @@
+# ===========================================================================
+#  OrbitFlow — FCC Part 100 Adopted Rules (Rules-as-Data)
+#  Source: FCC 25-69 Report & Order, SB Docket 25-306
+#  Status: ADOPTED (pre-effective, pending Federal Register publication)
+# ===========================================================================
+
+regime:
+  regime_id: "fcc_part_100_adopted"
+  status: "ADOPTED_PRE_EFFECTIVE"
+  source: "FCC 25-69 Report & Order, SB Docket 25-306"
+  adopted_date: "2026-07-22"
+  effective_date: "60 days after Federal Register publication"
+
+# ───────────────────────────────────────────────────────────────────────────
+# SCHEDULE O CERTIFICATIONS — NGSO § 100.111(c)(2)
+# ───────────────────────────────────────────────────────────────────────────
+schedule_o_ngso:
+  - cert_id: "NGSO-01"
+    criterion: "Operates only in non-geostationary orbit"
+    section: "§ 100.111(c)(2)(i)"
+    bright_line: true
+    check_type: "orbit_type"
+    pass_condition: "orbit_type != GEO"
+    threshold: null
+    threshold_unit: null
+
+  - cert_id: "NGSO-02"
+    criterion: "Identifiable by unique signal-based telemetry marker"
+    section: "§ 100.111(c)(2)(ii)"
+    bright_line: false
+    check_type: "user_attestation"
+    pass_condition: "user_confirms"
+    threshold: null
+    threshold_unit: null
+
+  - cert_id: "NGSO-03"
+    criterion: "Trackability — smallest dimension meets minimum size"
+    section: "§ 100.111(c)(2)(iii)"
+    bright_line: true
+    check_type: "dimension_vs_altitude"
+    pass_condition: "LEO: >= 10cm | Above 2000km: >= 100cm"
+    threshold_leo_cm: 10.0
+    threshold_above_leo_cm: 100.0
+
+  - cert_id: "NGSO-04"
+    criterion: "Will assess and mitigate collision risk upon conjunction warning"
+    section: "§ 100.111(c)(2)(iv)"
+    bright_line: false
+    check_type: "user_attestation"
+    pass_condition: "user_confirms"
+    threshold: null
+    threshold_unit: null
+
+  - cert_id: "NGSO-05"
+    criterion: "Small debris collision probability ≤ 0.01"
+    section: "§ 100.111(c)(2)(v)"
+    bright_line: true
+    check_type: "nasa_das_calculation"
+    pass_condition: "<= 0.01"
+    threshold: 0.01
+    threshold_unit: "probability"
+
+  - cert_id: "NGSO-06"
+    criterion: "Large object collision probability ≤ 0.001"
+    section: "§ 100.111(c)(2)(vi)"
+    bright_line: true
+    check_type: "nasa_das_calculation"
+    pass_condition: "<= 0.001"
+    threshold: 0.001
+    threshold_unit: "probability"
+
+  - cert_id: "NGSO-07"
+    criterion: "Human casualty risk from re-entry debris ≤ 0.0001"
+    section: "§ 100.111(c)(2)(vii)"
+    bright_line: true
+    check_type: "nasa_das_calculation"
+    pass_condition: "<= 0.0001"
+    threshold: 0.0001
+    threshold_unit: "probability"
+
+  - cert_id: "NGSO-08"
+    criterion: "All stored energy (fuel, batteries, pressurants) removed at end of life"
+    section: "§ 100.111(c)(2)(viii)"
+    bright_line: false
+    check_type: "user_attestation"
+    pass_condition: "user_confirms_passivation_plan"
+    threshold: null
+    threshold_unit: null
+
+  - cert_id: "NGSO-09"
+    criterion: "Disposed of via atmospheric re-entry"
+    section: "§ 100.111(c)(2)(ix)"
+    bright_line: true
+    check_type: "disposal_method"
+    pass_condition: "disposal_method == atmospheric_reentry"
+    threshold: null
+    threshold_unit: null
+
+  - cert_id: "NGSO-10"
+    criterion: "Designed and operated to de-orbit within 5 years post-mission"
+    section: "§ 100.260(e)"
+    bright_line: true
+    check_type: "deorbit_timeline"
+    pass_condition: "<= 5 years"
+    threshold: 5.0
+    threshold_unit: "years"
+
+  - cert_id: "NGSO-11"
+    criterion: "Probability of successful post-mission disposal ≥ 0.9"
+    section: "§ 100.111(c)(2)(xi)"
+    bright_line: true
+    check_type: "engineering_reliability"
+    pass_condition: ">= 0.9"
+    threshold: 0.9
+    threshold_unit: "probability"
+
+# ───────────────────────────────────────────────────────────────────────────
+# SCHEDULE O CERTIFICATIONS — GSO § 100.111(b)(2)
+# ───────────────────────────────────────────────────────────────────────────
+schedule_o_gso:
+  - cert_id: "GSO-01"
+    criterion: "Two-degree orbital spacing compliance"
+    section: "§§ 100.230, 100.278, 100.279"
+    bright_line: true
+    check_type: "orbital_location"
+    pass_condition: ">= 2° separation"
+    threshold: 2.0
+    threshold_unit: "degrees"
+
+  - cert_id: "GSO-02"
+    criterion: "Orbital debris rules compliance"
+    section: "§ 100.260"
+    bright_line: false
+    check_type: "odar_evaluation"
+    pass_condition: "full_compliance"
+    threshold: null
+    threshold_unit: null
+
+  - cert_id: "GSO-03"
+    criterion: "Small object collision probability ≤ 0.01"
+    section: "§ 100.111(b)(2)(iii)"
+    bright_line: true
+    check_type: "nasa_das_calculation"
+    pass_condition: "<= 0.01"
+    threshold: 0.01
+    threshold_unit: "probability"
+
+  - cert_id: "GSO-04"
+    criterion: "All stored energy removed at end of life"
+    section: "§ 100.111(b)(2)(iv)"
+    bright_line: false
+    check_type: "user_attestation"
+    pass_condition: "user_confirms_passivation_plan"
+    threshold: null
+    threshold_unit: null
+
+  - cert_id: "GSO-05"
+    criterion: "Smallest dimension ≥ 1 meter"
+    section: "§ 100.111(b)(2)(v)"
+    bright_line: true
+    check_type: "dimension_check"
+    pass_condition: ">= 100cm"
+    threshold: 100.0
+    threshold_unit: "cm"
+
+# ───────────────────────────────────────────────────────────────────────────
+# SCHEDULE O CERTIFICATIONS — VTSS § 100.111(d)(2)
+# ───────────────────────────────────────────────────────────────────────────
+schedule_o_vtss:
+  - cert_id: "VTSS-01"
+    criterion: "Identifiable by unique signal-based telemetry marker"
+    section: "§ 100.111(d)(2)(i)"
+    check_type: "user_attestation"
+
+  - cert_id: "VTSS-02"
+    criterion: "Trackability — smallest dimension meets minimum size"
+    section: "§ 100.111(d)(2)(ii)"
+    check_type: "dimension_vs_altitude"
+    threshold_leo_cm: 10.0
+    threshold_above_leo_cm: 100.0
+
+  - cert_id: "VTSS-03"
+    criterion: "Collision avoidance capability on conjunction warning"
+    section: "§ 100.111(d)(2)(iii)"
+    check_type: "user_attestation"
+
+  - cert_id: "VTSS-04"
+    criterion: "Share propagated ephemeris + covariance during maneuvers/RPO"
+    section: "§ 100.111(d)(2)(iv)"
+    check_type: "user_attestation"
+
+  - cert_id: "VTSS-05"
+    criterion: "All stored energy removed at end of life"
+    section: "§ 100.111(d)(2)(v)"
+    check_type: "user_attestation"
+
+  - cert_id: "VTSS-06"
+    criterion: "Client satellite servicing only with consent"
+    section: "§ 100.111(d)(2)(vi)"
+    check_type: "user_attestation"
+
+  - cert_id: "VTSS-07"
+    criterion: "Consult relevant federal agencies on mission safety"
+    section: "§ 100.111(d)(2)(vii)"
+    check_type: "user_attestation"
+
+  - cert_id: "VTSS-08"
+    criterion: "LEO termination — comply with § 100.260(e) 5-year de-orbit"
+    section: "§ 100.111(d)(2)(viii)"
+    check_type: "deorbit_timeline"
+    threshold: 5.0
+
+  - cert_id: "VTSS-09"
+    criterion: "GSO-arc termination — comply with § 100.260(b)"
+    section: "§ 100.111(d)(2)(ix)"
+    check_type: "disposal_method"
+
+  - cert_id: "VTSS-10"
+    criterion: "Beyond-GSO termination — dispose beyond Earth's orbit"
+    section: "§ 100.111(d)(2)(x)"
+    check_type: "disposal_method"
+
+  - cert_id: "VTSS-11"
+    criterion: "Human casualty risk ≤ 0.0001 (if re-entry disposal)"
+    section: "§ 100.111(d)(2)(xi)"
+    check_type: "nasa_das_calculation"
+    threshold: 0.0001
+
+  - cert_id: "VTSS-12"
+    criterion: "Register with SSA provider ≥ 30 days before launch"
+    section: "§ 100.111(d)(2)(xii)"
+    check_type: "user_attestation"
+
+# ───────────────────────────────────────────────────────────────────────────
+# SCHEDULE F CERTIFICATIONS — § 100.112(c)
+# ───────────────────────────────────────────────────────────────────────────
+schedule_f:
+  - cert_id: "FREQ-01"
+    criterion: "Comply with all applicable technical and operational rules"
+    section: "§ 100.112(c)(1)"
+    check_type: "multi_check"
+
+  - cert_id: "FREQ-02"
+    criterion: "Operate under ITU coordination procedures"
+    section: "§ 100.112(c)(2)"
+    check_type: "user_attestation"
+
+  - cert_id: "FREQ-03"
+    criterion: "Spacecraft can be commanded to cease transmissions"
+    section: "§ 100.112(c)(3)"
+    check_type: "user_attestation"
+
+# ───────────────────────────────────────────────────────────────────────────
+# FORM 312 MAIN FORM CERTIFICATIONS — § 100.101(a)(3)
+# ───────────────────────────────────────────────────────────────────────────
+form_312:
+  - cert_id: "FORM-01"
+    criterion: "Waiver of frequency/spectrum ownership claims"
+    section: "§ 100.101(a)(3)(i)"
+    check_type: "user_attestation"
+
+  - cert_id: "FORM-02"
+    criterion: "Anti-Drug Abuse Act certification"
+    section: "§ 100.101(a)(3)(ii)"
+    check_type: "user_attestation"
+
+  - cert_id: "FORM-03"
+    criterion: "Accuracy attestation under penalty of perjury"
+    section: "§ 100.101(a)(3)(iii)"
+    check_type: "user_attestation"
+
+# ───────────────────────────────────────────────────────────────────────────
+# BOND & MILESTONES
+# ───────────────────────────────────────────────────────────────────────────
+bonds:
+  processing_round:
+    base_amount_usd: 10000000
+    formula: "B = $10,000,000 - $10,000,000 × (D / (0.9 × A))"
+    citation: "§ 100.148(d)"
+    relief_at_pct: 90.0
+    note: "Processing round participants only"
+  non_processing_round:
+    base_amount_usd: 0
+    note: "No bond required outside processing rounds under Part 100"
+
+milestones:
+  ngso_processing_round:
+    "6yr": "50% deployed and operating"
+    "9yr": "100% deployed and operating"
+    citation: "§ 100.147(d)"
+    failure_consequence: "Reassignment to later processing round"
+  ngso_non_processing_round:
+    "7yr": "≥1 satellite deployed, operating 90 days continuous (Brought-Into-Use)"
+    "9yr": "10% deployed and operating"
+    "12yr": "50% deployed and operating"
+    "14yr": "100% deployed and operating"
+    citation: "§ 100.147(b)"
+    failure_consequence: "7yr failure → automatic license termination"
+  gso:
+    "5yr": "Launch, position, and operate at assigned orbital location"
+    citation: "§ 100.147(a)"
+  vtss:
+    note: "No deployment milestones required"
+    citation: "§ 100.147"
+
+# ───────────────────────────────────────────────────────────────────────────
+# KEY DELTAS: PART 25 → PART 100
+# ───────────────────────────────────────────────────────────────────────────
+deltas:
+  - field: "Rule Part"
+    part_25: "Part 25"
+    part_100: "Part 100 (Space and Earth Station Services)"
+    impact: "Complete regulatory restructuring"
+
+  - field: "Application Form"
+    part_25: "Form 312 + Schedule S"
+    part_100: "Form 312 Main + Schedule O + Schedule F + Schedule B"
+    impact: "New form structure; Schedule S eliminated"
+
+  - field: "Review Approach"
+    part_25: "Bespoke narrative review"
+    part_100: 'Certification-based, "Default to Yes"'
+    impact: "Faster processing for compliant applications"
+
+  - field: "Public Notice Period"
+    part_25: "30 days"
+    part_100: "15 days (single period)"
+    impact: "Halved comment window"
+
+  - field: "License Term"
+    part_25: "15 years (GSO/NGSO), 6 years (small sat)"
+    part_100: "20 years (default, all system types)"
+    impact: "Extended term; small sat distinction eliminated"
+
+  - field: "Surety Bond"
+    part_25: "All space stations, escalating"
+    part_100: "Processing round participants only, $10M flat, de-escalating"
+    impact: "Dramatically reduced bond burden for non-PR applicants"
+
+  - field: "De-orbit Rule"
+    part_25: "25-year (phasing to 5)"
+    part_100: "5-year post-mission (firm)"
+    impact: "Hard 5-year deadline, no phase-in"
+
+  - field: "Trackability"
+    part_25: "Statement (disclosure)"
+    part_100: "10cm LEO / 1m above 2000km (affirmative obligation)"
+    impact: "Bright-line physical size requirement"
+
+  - field: "Small Sat Process"
+    part_25: "§§ 25.122, 25.123"
+    part_100: "ELIMINATED — unified process for all"
+    impact: "No separate streamlined path; all go through Part 100"
+
+  - field: "VTSS Category"
+    part_25: "N/A"
+    part_100: "NEW category created"
+    impact: "Purpose-built licensing for servicing, RPO, transport"
+
+  - field: "MOSS Category"
+    part_25: "N/A"
+    part_100: "NEW category created"
+    impact: "Multi-orbit missions under single license"
+
+  - field: "Ephemeris Sharing"
+    part_25: "Disclosure only"
+    part_100: "REQUIRED (to SSA provider)"
+    impact: "Mandatory space situational awareness participation"
+
+  - field: "Space Safety Reports"
+    part_25: "None"
+    part_100: "Semi-annual (NGSO operators)"
+    impact: "New ongoing compliance obligation"
+
+  - field: "ITU Filing Flexibility"
+    part_25: "Required underlying application"
+    part_100: "Can file without application (max 5, 2-year deadline)"
+    impact: "Earlier ITU priority date possible"
+
+  - field: "Milestones (NGSO non-PR)"
+    part_25: "6yr 50%, 9yr 100%"
+    part_100: "7yr BIU, 9yr 10%, 12yr 50%, 14yr 100%"
+    impact: "More gradual ramp; first milestone is single-sat BIU"
+
+  - field: "GSO System"
+    part_25: "Single satellite per license"
+    part_100: "Multiple satellites at single orbital location allowed"
+    impact: "Simplified fleet management at single slot"
+
+  - field: "Earth Station Licensing"
+    part_25: "Site-by-site"
+    part_100: "Nationwide Non-Site License + Registration"
+    impact: "Two-step process; nationwide blanket approach"

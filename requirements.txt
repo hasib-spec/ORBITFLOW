@@ -1,0 +1,23 @@
+# OrbitFlow MVP Dependencies
+# ===========================
+
+# Data validation & schemas
+pydantic>=2.0,<3.0
+
+# Data manipulation
+pandas>=2.0
+
+# MVP UI
+streamlit>=1.30
+
+# PDF generation
+weasyprint>=60.0
+
+# HTML templating
+jinja2>=3.1
+
+# Rules-as-Data YAML loader
+pyyaml>=6.0
+
+# Date handling
+python-dateutil>=2.8

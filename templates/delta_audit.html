@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OrbitFlow — Part 100 Delta &amp; Certification Audit</title>
+<style>
+  /* ===================================================================
+     ORBITFLOW LAW-FIRM-GRADE PDF STYLING
+     Compatible with WeasyPrint and ReportLab / xhtml2pdf
+     =================================================================== */
+
+  @page {
+    size: letter portrait;
+    margin: 1.5cm 1.2cm 1.5cm 1.2cm;
+  }
+
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 9pt;
+    line-height: 1.5;
+    color: #111827;
+    background: #FFFFFF;
+  }
+
+  /* ── Confidential Bar ── */
+  .top-notice {
+    font-size: 7.5pt;
+    font-weight: bold;
+    color: #991B1B;
+    text-align: right;
+    margin-bottom: 8pt;
+    text-transform: uppercase;
+  }
+
+  /* ── Header Banner ── */
+  .header-banner {
+    background-color: #0F172A;
+    color: #FFFFFF;
+    padding: 16pt 18pt;
+    margin-bottom: 14pt;
+    border-left: 6pt solid #0EA5E9;
+  }
+  .header-banner h1 {
+    color: #FFFFFF;
+    font-size: 18pt;
+    font-weight: bold;
+    margin: 0 0 4pt 0;
+  }
+  .header-banner .subtitle {
+    color: #93C5FD;
+    font-size: 10pt;
+    margin-bottom: 8pt;
+  }
+  .header-banner .meta {
+    color: #CBD5E1;
+    font-size: 7.5pt;
+  }
+
+  /* ── Section Headings ── */
+  h2 {
+    font-size: 12pt;
+    font-weight: bold;
+    color: #0F172A;
+    margin-top: 16pt;
+    margin-bottom: 6pt;
+    padding-bottom: 3pt;
+    border-bottom: 1.5pt solid #0EA5E9;
+  }
+  h3 {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #1E293B;
+    margin-top: 10pt;
+    margin-bottom: 4pt;
+  }
+
+  /* ── Summary & KPI Boxes ── */
+  .summary-box {
+    background-color: #F0F9FF;
+    border: 1pt solid #BAE6FD;
+    padding: 10pt 12pt;
+    margin-bottom: 12pt;
+  }
+  .summary-box p {
+    color: #0369A1;
+    font-size: 8.5pt;
+    margin: 2pt 0;
+  }
+
+  table.kpi-table {
+    width: 100%;
+    margin-bottom: 12pt;
+    border-collapse: collapse;
+  }
+  table.kpi-table td {
+    padding: 8pt;
+    text-align: center;
+    background-color: #F8FAFC;
+    border: 1pt solid #E2E8F0;
+  }
+  .kpi-val {
+    font-size: 16pt;
+    font-weight: bold;
+  }
+  .kpi-lbl {
+    font-size: 7pt;
+    color: #64748B;
+    text-transform: uppercase;
+    margin-top: 2pt;
+  }
+  .val-pass { color: #059669; }
+  .val-fail { color: #DC2626; }
+  .val-warn { color: #D97706; }
+  .val-info { color: #0284C7; }
+
+  /* ── Tables ── */
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12pt;
+    font-size: 8pt;
+  }
+  table.data-table th {
+    background-color: #0F172A;
+    color: #FFFFFF;
+    text-align: left;
+    padding: 5pt 7pt;
+    font-weight: bold;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+  }
+  table.data-table td {
+    padding: 5pt 7pt;
+    border-bottom: 1pt solid #E2E8F0;
+    vertical-align: top;
+  }
+  table.data-table tr.even td {
+    background-color: #F8FAFC;
+  }
+
+  /* ── Badges ── */
+  .badge-pass {
+    color: #059669;
+    font-weight: bold;
+  }
+  .badge-fail {
+    color: #DC2626;
+    font-weight: bold;
+  }
+  .badge-warn {
+    color: #D97706;
+    font-weight: bold;
+  }
+  .badge-na {
+    color: #6B7280;
+  }
+
+  /* ── Bond Cards ── */
+  table.bond-table {
+    width: 100%;
+    margin-bottom: 12pt;
+    border-collapse: collapse;
+  }
+  table.bond-table td {
+    width: 50%;
+    padding: 10pt;
+    border: 1pt solid #CBD5E1;
+    vertical-align: top;
+  }
+  .bond-amount-old {
+    font-size: 18pt;
+    font-weight: bold;
+    color: #DC2626;
+  }
+  .bond-amount-new {
+    font-size: 18pt;
+    font-weight: bold;
+    color: #059669;
+  }
+
+  /* ── Callout Boxes ── */
+  .strategy-box {
+    background-color: #EFF6FF;
+    border-left: 4pt solid #2563EB;
+    padding: 8pt 12pt;
+    margin-bottom: 12pt;
+  }
+  .strategy-box .title {
+    font-weight: bold;
+    color: #1E40AF;
+    font-size: 9pt;
+    margin-bottom: 3pt;
+  }
+
+  .warning-box {
+    background-color: #FFFBEB;
+    border-left: 4pt solid #F59E0B;
+    padding: 8pt 12pt;
+    margin-bottom: 12pt;
+  }
+  .warning-box .title {
+    font-weight: bold;
+    color: #92400E;
+    font-size: 8.5pt;
+    margin-bottom: 3pt;
+  }
+
+  /* ── Legal Disclaimer ── */
+  .disclaimer-box {
+    background-color: #FEF2F2;
+    border: 1.5pt solid #DC2626;
+    padding: 10pt 12pt;
+    margin-top: 16pt;
+  }
+  .disclaimer-box .title {
+    font-weight: bold;
+    color: #991B1B;
+    font-size: 8pt;
+    text-transform: uppercase;
+    margin-bottom: 3pt;
+  }
+  .disclaimer-box p {
+    color: #7F1D1D;
+    font-size: 7pt;
+    line-height: 1.4;
+    margin: 2pt 0;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<div class="top-notice">CONFIDENTIAL — ATTORNEY WORK PRODUCT — REGULATORY AUDIT</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     HEADER BANNER
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="header-banner">
+  <h1>FCC Part 100 Delta &amp; Certification Audit</h1>
+  <div class="subtitle">Part 25 to Part 100 Transition Readiness Assessment (FCC 25-69, SB Docket 25-306)</div>
+  <div class="meta">
+    Report ID: {{ report.report_id }} &nbsp;|&nbsp;
+    Generated: {{ report.generated_at.strftime('%B %d, %Y at %H:%M UTC') }} &nbsp;|&nbsp;
+    Engine: OrbitFlow v{{ report.engine_version }}
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SYSTEM OVERVIEW
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="summary-box">
+  <p><strong>System Name:</strong> {{ spec.name }}{% if spec.operator_name %} &nbsp;({{ spec.operator_name }}){% endif %}</p>
+  <p><strong>FCC Classification:</strong> {{ report.system_type.value }} &nbsp;—&nbsp; {{ report.orbit_classification }}</p>
+  <p><strong>Constellation Size:</strong> {{ spec.num_authorized }} authorized / {{ spec.num_deployed }} deployed / {{ spec.mass_kg | round(1) }} kg wet mass</p>
+  <p><strong>Regime Evaluated:</strong> {{ report.regime_evaluated }}</p>
+</div>
+
+<!-- KPI Cards -->
+<table class="kpi-table">
+  <tr>
+    <td>
+      <div class="kpi-val val-pass">{{ report.pass_count }}</div>
+      <div class="kpi-lbl">Certifications Passed</div>
+    </td>
+    <td>
+      <div class="kpi-val val-fail">{{ report.fail_count }}</div>
+      <div class="kpi-lbl">Certifications Failed</div>
+    </td>
+    <td>
+      <div class="kpi-val val-warn">{{ report.insufficient_count }}</div>
+      <div class="kpi-lbl">Attestation Needed</div>
+    </td>
+    <td>
+      <div class="kpi-val val-info">{{ report.targeted_reviews | selectattr('triggered') | list | length }}</div>
+      <div class="kpi-lbl">Reviews Triggered</div>
+    </td>
+    <td>
+      <div class="kpi-val val-pass">{{ bond.part_100_bond_usd | currency }}</div>
+      <div class="kpi-lbl">Part 100 Bond Due</div>
+    </td>
+  </tr>
+</table>
+
+{% if report.warnings %}
+<div class="warning-box">
+  <div class="title">Actionable Regulatory Risk Flags:</div>
+  {% for w in report.warnings %}
+  <div style="font-size: 7.5pt; color: #92400E;">• {{ w }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 1: PART 25 vs PART 100 DELTA MATRIX
+     ═══════════════════════════════════════════════════════════════════════ -->
+<h2>1. Part 25 vs Part 100 Regulatory Delta Matrix</h2>
+<p style="font-size: 8pt; color: #4B5563; margin-bottom: 6pt;">Statutory comparison of key operational and procedural rules affecting this satellite authorization.</p>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th style="width: 25%;">Regulatory Dimension</th>
+      <th style="width: 37%;">Part 25 (Legacy Framework)</th>
+      <th style="width: 38%;">Part 100 (Adopted Framework)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Application Structure</strong></td>
+      <td>Form 312 + Schedule S</td>
+      <td>Form 312 Main + Schedule O/F/B</td>
+    </tr>
+    <tr class="even">
+      <td><strong>Review Methodology</strong></td>
+      <td>Bespoke narrative engineering review</td>
+      <td>Certification-based "Default to Yes"</td>
+    </tr>
+    <tr>
+      <td><strong>Public Notice Window</strong></td>
+      <td>30 Days</td>
+      <td>15 Days (Single period)</td>
+    </tr>
+    <tr class="even">
+      <td><strong>License Duration</strong></td>
+      <td>{{ report.license_term_part_25 }}</td>
+      <td>{{ report.license_term_part_100 }}</td>
+    </tr>
+    <tr>
+      <td><strong>Surety Bond Requirement</strong></td>
+      <td>{{ bond.part_25_bond_usd | currency }} (Escalating)</td>
+      <td>{{ bond.part_100_bond_usd | currency }} (De-escalating / PR only)</td>
+    </tr>
+    <tr class="even">
+      <td><strong>De-orbit Timeline</strong></td>
+      <td>25-Year rule</td>
+      <td>5-Year post-mission (§ 100.260(e))</td>
+    </tr>
+    <tr>
+      <td><strong>Physical Trackability</strong></td>
+      <td>Statement only</td>
+      <td>≥10cm LEO / ≥1m &gt;2000km (Affirmative)</td>
+    </tr>
+    <tr class="even">
+      <td><strong>Space Safety Reporting</strong></td>
+      <td>None</td>
+      <td>Semi-annual mandatory report (NGSO)</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 2: SURETY BOND & MILESTONES
+     ═══════════════════════════════════════════════════════════════════════ -->
+<h2>2. Surety Bond &amp; Milestone Impact (§ 100.148 &amp; § 100.147)</h2>
+
+<table class="bond-table">
+  <tr>
+    <td>
+      <div style="font-size: 7pt; color: #64748B; text-transform: uppercase;">Part 25 Legacy Bond</div>
+      <div class="bond-amount-old">{{ bond.part_25_bond_usd | currency }}</div>
+      <div style="font-size: 7pt; color: #64748B; margin-top: 4pt;">Mandatory escalating bond required for all space station authorizations.</div>
+    </td>
+    <td>
+      <div style="font-size: 7pt; color: #64748B; text-transform: uppercase;">Part 100 Adopted Bond</div>
+      <div class="bond-amount-new">{{ bond.part_100_bond_usd | currency }}</div>
+      <div style="font-size: 7pt; color: #64748B; margin-top: 4pt;">
+        {% if spec.in_processing_round %}
+          Formula: {{ bond.part_100_formula }}<br>
+          Current Deployment: {{ bond.deployment_pct }}% (Fully released at 90%)
+        {% else %}
+          Non-processing round applicant → $0 bond obligation under Part 100.
+        {% endif %}
+      </div>
+    </td>
+  </tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 3: CERTIFICATION READINESS MATRIX
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h2>3. Part 100 Certification Readiness Matrix (Schedule O &amp; F)</h2>
+<p style="font-size: 8pt; color: #4B5563; margin-bottom: 6pt;">Deterministic evaluation of all statutory bright-line certifications based on supplied mission parameters.</p>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th style="width: 10%;">ID</th>
+      <th style="width: 32%;">Statutory Criterion</th>
+      <th style="width: 16%;">FCC Section</th>
+      <th style="width: 12%;">Status</th>
+      <th style="width: 30%;">Evaluation Detail</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cert in certs %}
+    <tr class="{% if loop.index is even %}even{% endif %}">
+      <td><strong>{{ cert.cert_id }}</strong></td>
+      <td>{{ cert.criterion }}</td>
+      <td style="font-size: 7pt;">{{ cert.section }}</td>
+      <td>
+        {% if cert.status == CertStatus.PASS %}
+          <span class="badge-pass">PASS</span>
+        {% elif cert.status == CertStatus.FAIL %}
+          <span class="badge-fail">FAIL</span>
+        {% elif cert.status == CertStatus.INSUFFICIENT_DATA %}
+          <span class="badge-warn">ATTEST</span>
+        {% else %}
+          <span class="badge-na">N/A</span>
+        {% endif %}
+      </td>
+      <td style="font-size: 7pt; color: #374151;">
+        {% if cert.value %}Value: <strong>{{ cert.value }}</strong><br>{% endif %}
+        {{ cert.notes or cert.evidence or 'Verified against telemetry model' }}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 4: 7 TARGETED REVIEW CATEGORIES
+     ═══════════════════════════════════════════════════════════════════════ -->
+<h2>4. Targeted Review Category Pre-Screen (§ 100.136(b))</h2>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th style="width: 25%;">Targeted Category</th>
+      <th style="width: 15%;">FCC Rule</th>
+      <th style="width: 12%;">Triggered</th>
+      <th style="width: 48%;">Action Required</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for rev in reviews %}
+    <tr class="{% if loop.index is even %}even{% endif %}">
+      <td><strong>{{ rev.category.value }}</strong></td>
+      <td style="font-size: 7pt;">{{ rev.section }}</td>
+      <td>
+        {% if rev.triggered %}
+          <span class="badge-fail">YES</span>
+        {% else %}
+          <span class="badge-pass">CLEAR</span>
+        {% endif %}
+      </td>
+      <td style="font-size: 7pt;">{{ rev.details }}. <em>{{ rev.action_required }}</em></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 5: ORBITAL DEBRIS ASSESSMENT (NASA DAS EQUIVALENT)
+     ═══════════════════════════════════════════════════════════════════════ -->
+{% if report.odar_report %}
+<h2>5. Orbital Debris Mitigation Assessment (§ 100.260 &amp; § 100.111)</h2>
+
+<table class="data-table" style="margin-bottom: 12pt;">
+  <thead>
+    <tr>
+      <th style="width: 30%;">Debris Mitigation Metric</th>
+      <th style="width: 20%;">Calculated Physics Value</th>
+      <th style="width: 20%;">FCC Part 100 Limit</th>
+      <th style="width: 30%;">Compliance Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Post-Mission Orbital Lifetime</strong></td>
+      <td>{{ report.odar_report.orbital_lifetime.natural_decay_years }} yrs (natural)</td>
+      <td>&le; 5.0 years</td>
+      <td>
+        {% if report.odar_report.orbital_lifetime.compliant_with_5_year_rule %}
+          <span class="badge-pass">COMPLIANT (&le; 5 yr)</span>
+        {% else %}
+          <span class="badge-fail">NON-COMPLIANT</span>
+        {% endif %}
+      </td>
+    </tr>
+    <tr class="even">
+      <td><strong>Small Debris Collision Risk (&ge;1mm)</strong></td>
+      <td>{{ report.odar_report.collision_probability.small_debris_collision_prob }}</td>
+      <td>&le; 0.01000</td>
+      <td>
+        {% if report.odar_report.collision_probability.small_debris_compliant %}
+          <span class="badge-pass">PASS (NASA ORDEM)</span>
+        {% else %}
+          <span class="badge-fail">EXCEEDS LIMIT</span>
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Large Object Collision Risk (&ge;10cm)</strong></td>
+      <td>{{ report.odar_report.collision_probability.large_object_collision_prob_with_maneuver }}</td>
+      <td>&le; 0.00100</td>
+      <td>
+        {% if report.odar_report.collision_probability.large_object_compliant %}
+          <span class="badge-pass">PASS (&ge;95% avoidance)</span>
+        {% else %}
+          <span class="badge-fail">EXCEEDS LIMIT</span>
+        {% endif %}
+      </td>
+    </tr>
+    <tr class="even">
+      <td><strong>Re-entry Casualty Risk (E<sub>c</sub>)</strong></td>
+      <td>{{ "%.2e"|format(report.odar_report.casualty_risk.human_casualty_expectation) }} (DCA: {{ report.odar_report.casualty_risk.total_casualty_area_m2 }} m&sup2;)</td>
+      <td>&le; 1.00e-04 (1:10,000)</td>
+      <td>
+        {% if report.odar_report.casualty_risk.casualty_risk_compliant %}
+          <span class="badge-pass">PASS (&le; 1:10,000)</span>
+        {% else %}
+          <span class="badge-fail">EXCEEDS THRESHOLD</span>
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Disposal Success Reliability</strong></td>
+      <td>{{ "%.1f"|format(report.odar_report.disposal_reliability.overall_disposal_success_prob * 100) }}%</td>
+      <td>&ge; 90.0%</td>
+      <td>
+        {% if report.odar_report.disposal_reliability.disposal_reliability_compliant %}
+          <span class="badge-pass">PASS (&ge; 90%)</span>
+        {% else %}
+          <span class="badge-fail">DEFICIENT</span>
+        {% endif %}
+      </td>
+    </tr>
+  </tbody>
+</table>
+{% endif %}
+
+{% if report.spectrum_report %}
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 6: RF SPECTRUM & EPFD INTERFERENCE ANALYSIS
+     ═══════════════════════════════════════════════════════════════════════ -->
+<h2>6. Radio Frequency Spectrum &amp; EPFD Interference Audit (&sect;&sect; 100.212, 100.222, 100.280)</h2>
+
+<div class="summary-box" style="margin-bottom: 8pt;">
+  <div class="title" style="color: #1E3A8A;">Spectrum Engineering Assessment Verdict:</div>
+  <p style="font-size: 8pt; color: #1E3A8A; line-height: 1.4;">{{ report.spectrum_report.summary_verdict }}</p>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 25%;">Spectrum Parameter</th>
+      <th style="width: 30%;">Calculated Technical Value</th>
+      <th style="width: 25%;">Statutory / ITU Limit</th>
+      <th style="width: 20%;">Compliance Verdict</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for pfd in report.spectrum_report.pfd_analysis %}
+    <tr class="{% if loop.index is even %}even{% endif %}">
+      <td><strong>PFD at Earth's Surface (&sect; 100.212)</strong><br><span style="font-size: 7pt; color: #64748B;">{{ pfd.band.value }} ({{ pfd.center_frequency_ghz }} GHz)</span></td>
+      <td>Critical Elev: {{ pfd.critical_elevation_deg }}&deg; (Margin: {{ "%+.2f"|format(pfd.min_margin_db) }} dB)</td>
+      <td>ITU-R SF.1006 / SF.1602 Stepped Mask</td>
+      <td>
+        {% if pfd.is_fully_compliant %}
+          <span class="badge-pass">PASS (Compliant)</span>
+        {% else %}
+          <span class="badge-fail">EXCEEDS MASK</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+
+    {% if report.spectrum_report.epfd_downlink_analysis %}
+    <tr class="even">
+      <td><strong>Aggregate EPFD<sub>down</sub> (&sect; 100.222)</strong><br><span style="font-size: 7pt; color: #64748B;">ITU RR Art. 22 Table 22-1</span></td>
+      <td>{{ "%+.2f"|format(report.spectrum_report.epfd_downlink_analysis.aggregate_epfd_dbw_m2_bw) }} dBW ({{ report.spectrum_report.epfd_downlink_analysis.visible_satellites_count }} visible sats)</td>
+      <td>{{ report.spectrum_report.epfd_downlink_analysis.itu_art22_limit_dbw_m2_bw }} dBW/{{ report.spectrum_report.epfd_downlink_analysis.reference_bandwidth_khz }}kHz</td>
+      <td>
+        {% if report.spectrum_report.epfd_downlink_analysis.compliant %}
+          <span class="badge-pass">PASS (Margin: {{ "%+.2f"|format(report.spectrum_report.epfd_downlink_analysis.margin_db) }} dB)</span>
+        {% else %}
+          <span class="badge-fail">EXCEEDS LIMIT</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endif %}
+
+    {% if report.spectrum_report.off_axis_eirp_analysis %}
+    <tr>
+      <td><strong>2-Degree Spacing Off-Axis EIRP (&sect; 100.280)</strong></td>
+      <td>Actual: {{ report.spectrum_report.off_axis_eirp_analysis.actual_eirp_density_dbw }} dBW at &theta;=2.0&deg;</td>
+      <td>Limit: {{ report.spectrum_report.off_axis_eirp_analysis.copolar_limit_dbw }} dBW</td>
+      <td>
+        {% if report.spectrum_report.off_axis_eirp_analysis.two_degree_spacing_compliant %}
+          <span class="badge-pass">PASS (2&deg; Spacing)</span>
+        {% else %}
+          <span class="badge-fail">EXCEEDS 2&deg; MASK</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endif %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if report.filing_package %}
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 7: FCC PART 100 SUBMISSION-READY PACKAGE MANIFEST
+     ═══════════════════════════════════════════════════════════════════════ -->
+<h2>7. FCC Part 100 Filing Package Manifest (&sect;&sect; 100.101, 100.111, 100.112)</h2>
+
+<div class="summary-box" style="margin-bottom: 8pt;">
+  <div class="title" style="color: #065F46;">Legal Assembly Status: {{ report.filing_package.package_id }}</div>
+  <p style="font-size: 8pt; color: #065F46; line-height: 1.4;">{{ report.filing_package.summary_verdict }}</p>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 35%;">Submission Component</th>
+      <th style="width: 25%;">Governing Section</th>
+      <th style="width: 40%;">Cryptographic SHA-256 Checksum</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for filename, sha in report.filing_package.manifest_checksums_sha256.items() %}
+    <tr class="{% if loop.index is even %}even{% endif %}">
+      <td><strong>{{ filename }}</strong></td>
+      <td>
+        {% if 'Form_312' in filename or 'Legal' in filename %}
+          &sect; 100.101 (Main Form)
+        {% elif 'Schedule_O' in filename or 'Orbital' in filename %}
+          &sect; 100.111 (Schedule O)
+        {% elif 'Schedule_F' in filename or 'Spectrum' in filename %}
+          &sect; 100.112 (Schedule F)
+        {% elif 'Public_Interest' in filename %}
+          47 U.S.C. &sect; 309(a)
+        {% else %}
+          Root Container
+        {% endif %}
+      </td>
+      <td><code style="font-size: 6.5pt;">{{ sha[:24] }}...{{ sha[-8:] }}</code></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 8: FILING STRATEGY RECOMMENDATION
+     ═══════════════════════════════════════════════════════════════════════ -->
+<h2>8. Strategic Counsel Filing Recommendation</h2>
+
+<div class="strategy-box">
+  <div class="title">Regulatory Counsel Assessment:</div>
+  <p style="font-size: 8pt; color: #1E3A8A; line-height: 1.45;">{{ report.filing_strategy }}</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     LEGAL DISCLAIMER
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="disclaimer-box">
+  <div class="title">Legal &amp; Regulatory Compliance Notice</div>
+  <p>
+    This audit was generated by the OrbitFlow Automated Regulatory Engine for informational and strategic planning purposes only.
+    <strong>It does not constitute formal legal advice, engineering certification, or an official representation before the Federal Communications Commission.</strong>
+  </p>
+  <p>
+    All certifications, orbital debris calculations, PFD/EPFD spectrum analyses, and targeted review assessments must be formally reviewed and signed off by qualified regulatory legal counsel and licensed aerospace engineers prior to formal submission under FCC Part 100 (SB Docket 25-306).
+  </p>
+  <p style="margin-top: 4pt; color: #991B1B; font-weight: bold;">
+    Report ID: {{ report.report_id }} &nbsp;|&nbsp; Engine Version: OrbitFlow v{{ report.engine_version }} &nbsp;|&nbsp; Confidential Attorney Work Product
+  </p>
+</div>
+
+</body>
+</html>

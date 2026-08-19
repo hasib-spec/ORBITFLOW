@@ -1,0 +1,104 @@
+# ===========================================================================
+#  OrbitFlow — Targeted Review Categories (Rules-as-Data)
+#  Source: FCC 25-69 Report & Order § 100.136(b)
+# ===========================================================================
+
+targeted_review_categories:
+  - category_id: "TR-01"
+    name: "Failure to Certify"
+    section: "§ 100.136(b)(1)"
+    trigger: "Any negative certification (FAIL) on Schedule O, Schedule F, or Form 312"
+    action: "Additional information or waiver required before grant"
+    severity: "HIGH"
+    auto_detectable: true
+    detection_logic: "any(cert.status == FAIL for cert in certifications)"
+
+  - category_id: "TR-02"
+    name: "Waiver Request"
+    section: "§ 100.136(b)(2)"
+    trigger: "Application includes any request for waiver of FCC rules"
+    action: "Full merits review of waiver justification"
+    severity: "HIGH"
+    auto_detectable: true
+    detection_logic: "waiver_requested == True"
+
+  - category_id: "TR-03"
+    name: "Market Access"
+    section: "§ 100.136(b)(3)"
+    trigger: "Non-U.S. licensed space station seeking U.S. market access"
+    action: "Review under § 100.114 market access framework"
+    severity: "MEDIUM"
+    auto_detectable: true
+    detection_logic: "is_us_licensed == False"
+
+  - category_id: "TR-04"
+    name: "Foreign Ownership"
+    section: "§ 100.136(b)(4)"
+    trigger: "Reportable foreign ownership exceeding disclosure threshold"
+    action: "Possible Executive Branch referral (Team Telecom)"
+    severity: "HIGH"
+    auto_detectable: true
+    detection_logic: "foreign_ownership_pct > 10.0"
+    threshold: 10.0
+
+  - category_id: "TR-05"
+    name: "Processing Round"
+    section: "§ 100.136(b)(5)"
+    trigger: "Application opts into processing round for PR-eligible band"
+    action: "§ 100.141 processing round procedures"
+    severity: "MEDIUM"
+    auto_detectable: true
+    detection_logic: "in_processing_round == True"
+
+  - category_id: "TR-06"
+    name: "Spectral Constraints"
+    section: "§ 100.136(b)(6)"
+    trigger: "Spectrum limited by existing rules, users, or international agreements"
+    action: "Focused review of spectrum sharing feasibility"
+    severity: "MEDIUM"
+    auto_detectable: false
+    detection_logic: "requires_manual_evaluation"
+    note: "Cannot be fully auto-detected in MVP — flag for manual review"
+
+  - category_id: "TR-07"
+    name: "Federal Coordination"
+    section: "§ 100.136(b)(7)"
+    trigger: "Any requested frequency band shared with federal allocations"
+    action: "NTIA coordination required"
+    severity: "MEDIUM"
+    auto_detectable: true
+    detection_logic: "federal_bands_requested == True"
+
+# ───────────────────────────────────────────────────────────────────────────
+# Processing pathway logic
+# ───────────────────────────────────────────────────────────────────────────
+pathway_logic:
+  zero_categories:
+    process: "15-day public notice → Grant"
+    timeline_estimate: "30–60 days"
+    note: "Fastest path — certification-based default approval"
+
+  one_or_more_categories:
+    process: "15-day public notice → Focused review on flagged categories"
+    timeline_estimate: "60–180+ days depending on categories"
+    note: "Each category adds review scope; cumulative delay possible"
+
+  conditional_grant_types:
+    - type: "Orbital Debris Deferral"
+      section: "§ 100.139(a)(3)"
+      conditions:
+        - "Cannot launch/operate until ODMP approved"
+        - "Must submit ODMP ≥6 months before launch integration"
+
+    - type: "Commercial Coordination"
+      section: "§ 100.139(a)(4)"
+      conditions:
+        - "Grant non-coordinated bands immediately"
+        - "Condition coordinated bands on notice of completion"
+      restriction: "Not available for processing round NGSO FSS"
+
+    - type: "Federal Coordination"
+      section: "§ 100.139(a)(5)"
+      conditions:
+        - "Grant non-federal bands immediately"
+        - "Condition federal bands on NTIA coordination completion"

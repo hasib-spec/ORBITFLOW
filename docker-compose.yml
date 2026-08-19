@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  orbitflow-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orbitflow-streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/app
+    restart: unless-stopped
