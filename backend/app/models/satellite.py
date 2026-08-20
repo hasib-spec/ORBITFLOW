@@ -344,3 +344,16 @@ class AuditResult(BaseModel):
         default=None,
         description="Complete Form 312 + Schedule O + Schedule F legal filing package",
     )
+
+    # Complete Submission-Ready ITU Filing Package (Module 12)
+    itu_package: Optional[Any] = Field(
+        default=None,
+        description="Complete ITU Appendix 4 + SpaceCap XML filing package",
+    )
+
+    # Complete Earth Station Nationwide Non-Site Package (Module 19)
+    earth_station_package: Optional[Any] = Field(
+        default=None,
+        description="Complete Schedule B XML + Link Budget + Site Registration package",
+    )
+

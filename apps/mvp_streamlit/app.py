@@ -287,9 +287,14 @@ with st.sidebar:
                 st.session_state["deorbit_yrs"] = space_client.estimate_deorbit_lifetime(
                     telem.mean_altitude_km, telem.bstar_drag_term, True, weather
                 )
-                st.success(f"Loaded {telem.name}!")
+                st.success(f"Loaded {telem.name}!\n\n**Data Provenance:** {telem.status_badge}")
             except Exception as e:
-                st.error(f"Live API Error: {e}")
+                st.error(f"Live Telemetry Error: {e}")
+
+    if "live_telem" in st.session_state:
+        lt = st.session_state["live_telem"]
+        st.info(f"**Active Telemetry:** {lt.name} (NORAD #{lt.norad_cat_id})  \n**Tier:** {lt.status_badge}")
+
 
     st.markdown("---")
     st.markdown("### ⚙️ Satellite Specifications")
@@ -418,17 +423,20 @@ if "audit_result" in st.session_state:
     st.markdown("---")
 
     # ── Tabs ──
-    tab_delta, tab_odar, tab_spectrum, tab_filing, tab_bond, tab_certs, tab_reviews, tab_strategy, tab_pdf = st.tabs([
+    tab_delta, tab_odar, tab_spectrum, tab_filing, tab_itu, tab_es, tab_bond, tab_certs, tab_reviews, tab_strategy, tab_pdf = st.tabs([
         "📊 Part 25 vs 100 Delta",
         "🛰️ ODAR Debris Physics (Mod 9)",
         "📡 Spectrum & EPFD Physics (Mod 10)",
         "📦 FCC Part 100 Filing Package (Mod 11)",
+        "🌐 ITU Filing Package (Mod 12)",
+        "📡 Earth Station Schedule B (Mod 19)",
         "💰 Surety Bond & Milestones",
         "🔬 Certification Matrix",
         "🔍 7 Targeted Reviews",
         "📋 Filing Strategy",
         "📄 Law-Firm PDF Report",
     ])
+
 
     # ── TAB 1: Delta Matrix ──
     with tab_delta:
@@ -659,6 +667,106 @@ if "audit_result" in st.session_state:
             st.markdown("#### 🔒 Cryptographic SHA-256 Audit Manifest")
             sha_rows = [{"Document Artifact": k, "SHA-256 Checksum": v} for k, v in fp.manifest_checksums_sha256.items()]
             st.dataframe(pd.DataFrame(sha_rows), use_container_width=True, hide_index=True)
+
+    # ── TAB 10: ITU Filing Package (Module 12) ──
+    with tab_itu:
+        st.subheader("🌐 ITU Satellite Network Filing Package (Module 12)")
+        st.caption("ITU Radio Regulations Appendix 4 (Annex 2B/2C), Article 9 Coordination, & 47 CFR § 100.115 Compliance")
+        if result.itu_package:
+            itu = result.itu_package
+            ic1, ic2, ic3, ic4 = st.columns(4)
+            ic1.metric("ITU Notice Type", itu.notice_type.value)
+            ic2.metric("Orbit Classification", itu.orbit_type.value)
+            ic3.metric("Validation Status", itu.validation_status)
+            clock_info = itu.two_year_clock_status
+            ic4.metric(
+                "2-Year Clock (§ 100.115)",
+                f"{clock_info.get('days_remaining', 730)} days left" if clock_info.get("clock_active") else clock_info.get("status", "OK"),
+            )
+
+            if itu.is_fully_compliant:
+                st.success("🟢 **ITU APPENDIX 4 COMPLIANT** — All frequency groupings, PFD limits, and Article 5 allocations verified.")
+            else:
+                st.warning("⚠️ **ITU FILING DEFICIENCIES** — Check carrier frequency allocations or station class codes.")
+
+            # ITU Group Table
+            st.markdown("#### 🛰️ Radiocommunication Bureau Frequency Groups (`grp`)")
+            grp_rows = []
+            for g in itu.groups_formed:
+                grp_rows.append({
+                    "Group ID": f"GRP-{g.grp_id:02d}",
+                    "Beam ID": g.beam_id,
+                    "Direction": "Space-to-Earth (DL)" if g.direction == "E" else "Earth-to-Space (UL)",
+                    "Station Class": g.station_class,
+                    "Polarization": g.polarization,
+                    "Max EIRP (dBW)": f"{g.eirp_max_dbw:.1f}",
+                    "Max PSD (dBW/Hz)": f"{g.psd_max_dbw_hz:.1f}",
+                    "Frequency Count": len(g.carrier_frequencies),
+                    "Emissions": ", ".join(g.emissions),
+                })
+            st.dataframe(pd.DataFrame(grp_rows), use_container_width=True, hide_index=True)
+
+            # SpaceCap XML Exporter
+            st.markdown("#### 💾 SpaceCap / BR IFIC XML Electronic Notification")
+            st.download_button(
+                "⬇️ Download ITU SpaceCap XML Package",
+                data=itu.spacecap_xml,
+                file_name=f"ITU_SpaceCap_{itu.satellite_name}.xml",
+                mime="application/xml",
+                use_container_width=True,
+            )
+            with st.expander("📄 View SpaceCap Electronic XML Schema"):
+                st.code(itu.spacecap_xml, language="xml")
+
+    # ── TAB 11: Earth Station Schedule B (Module 19) ──
+    with tab_es:
+        st.subheader("📡 Earth Station Nationwide Non-Site Engine (Module 19)")
+        st.caption("47 CFR § 100.120 (Nationwide Non-Site License) & § 100.121 (Site Registration within 365d BIU)")
+        if result.earth_station_package:
+            esp = result.earth_station_package
+            ec1, ec2, ec3, ec4 = st.columns(4)
+            ec1.metric("Lead License Call Sign", esp.license_callsign)
+            ec2.metric("365-Day BIU Deadline", esp.biu_deadline.isoformat())
+            ec3.metric("Rain-Faded Eb/N0 Margin", f"{esp.link_budget.link_margin_rain_db:.1f} dB", delta="Link Closed" if esp.link_budget.is_link_closed else "Link Margin Deficit")
+            ec4.metric("Pre-Grant Operations", "AUTHORIZED" if esp.pre_grant_status.is_authorized_pre_grant else "PENDING")
+
+            st.markdown("---")
+            # RF Propagation & G/T Thermodynamics
+            st.markdown("#### 🔬 RF Thermodynamics & Atmospheric Attenuation (ITU-R P.618 / P.676)")
+            lb = esp.link_budget
+            lcol1, lcol2, lcol3, lcol4 = st.columns(4)
+            lcol1.metric("Free Space Loss (19.7 GHz)", f"{lb.free_space_loss_db:.1f} dB")
+            lcol2.metric("Gaseous Absorption (P.676)", f"{lb.atmospheric_loss_db:.2f} dB")
+            lcol3.metric("Rain Attenuation (P.618)", f"{lb.rain_attenuation_db:.2f} dB")
+            lcol4.metric("Antenna G/T (Rain-Faded)", f"{lb.rain_faded_g_t_db_k:.1f} dB/K")
+
+            # Registered Sites Registry
+            st.markdown("#### 📍 Immovable Earth Station Site Registrations (§ 100.121)")
+            site_rows = []
+            for s in esp.registered_sites:
+                site_rows.append({
+                    "Site ID": s.site_id,
+                    "Site Name": s.site_name,
+                    "Classification": s.classification.value,
+                    "Coordinates": f"{s.latitude_deg:.4f}°, {s.longitude_deg:.4f}°",
+                    "Elevation AMSL": f"{s.site_elevation_amsl_m} m",
+                    "Antenna Count": len(s.antennas),
+                    "Prior PCN Status": "COMPLETED" if s.pcn_completed_no_conflicts else "PENDING",
+                    "BIU Clock Status": s.biu_status.value,
+                })
+            st.dataframe(pd.DataFrame(site_rows), use_container_width=True, hide_index=True)
+
+            # Schedule B XML Exporter
+            st.markdown("#### 💾 FCC Form 312 Schedule B XML Electronic Export")
+            st.download_button(
+                "⬇️ Download Form 312 Schedule B XML",
+                data=esp.schedule_b_xml,
+                file_name=f"Schedule_B_{esp.license_callsign}.xml",
+                mime="application/xml",
+                use_container_width=True,
+            )
+            with st.expander("📄 View Form 312 Schedule B XML Document"):
+                st.code(esp.schedule_b_xml, language="xml")
 
     # ── TAB 5: Bond & Milestones ──
     with tab_bond:

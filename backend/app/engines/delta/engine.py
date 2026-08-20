@@ -35,6 +35,7 @@ from backend.app.core.config import (
     TRACKABILITY_LEO_CM,
     get_logger,
 )
+from backend.app.engines.earth_station import get_earth_station_engine
 from backend.app.engines.epfd import (
     SpectrumEngine,
     SpectrumSharingReport,
@@ -44,7 +45,9 @@ from backend.app.engines.fcc import (
     FCCFilingBundler,
     FilingPackage,
 )
+from backend.app.engines.itu import get_itu_filing_engine
 from backend.app.engines.odar import ODAREngine, ODARReport
+
 from backend.app.models.satellite import (
     AuditResult,
     BondDelta,
@@ -815,6 +818,21 @@ def run_delta_audit(spec: SatelliteSpec) -> AuditResult:
         spectrum=spectrum_report,
     )
 
+    # Assemble ITU Appendix 4 / SpaceCap Filing Package (Module 12)
+    itu_engine = get_itu_filing_engine()
+    itu_package = itu_engine.generate_filing_package(
+        spec=spec,
+        authorizing_officer="Haseeb Ahmad",
+        billing_email="haedu59@gmail.com",
+    )
+
+    # Assemble Earth Station Nationwide Non-Site Package (Module 19)
+    earth_station_engine = get_earth_station_engine()
+    earth_station_package = earth_station_engine.generate_earth_station_package(
+        spec=spec,
+        applicant_name=spec.operator_name or "OrbitalFlow Communications Inc.",
+    )
+
     # Filing strategy
     strategy = recommend_filing_strategy(spec, certs, reviews)
 
@@ -887,6 +905,8 @@ def run_delta_audit(spec: SatelliteSpec) -> AuditResult:
         odar_report=odar_report,
         spectrum_report=spectrum_report,
         filing_package=filing_package,
+        itu_package=itu_package,
+        earth_station_package=earth_station_package,
     )
 
     log.info(
