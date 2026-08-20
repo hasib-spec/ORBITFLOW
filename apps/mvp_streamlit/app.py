@@ -209,26 +209,44 @@ with st.sidebar:
             ext_result = doc_engine.extract_from_document(parsed_doc)
             st.session_state["doc_extraction"] = ext_result
 
-            # Populate session state from extracted fields
+            # Populate session state from extracted fields with Tiered Confidence Gating
             o = ext_result.schedule_o
-            if o.system_name:
-                st.session_state["name"] = str(o.system_name.extracted_value)
-            if o.altitude_km:
-                st.session_state["altitude"] = float(o.altitude_km.extracted_value)
-            if o.inclination_deg:
-                st.session_state["inclination"] = float(o.inclination_deg.extracted_value)
-            if o.mass_kg:
-                st.session_state["mass"] = float(o.mass_kg.extracted_value)
-            if o.smallest_dimension_cm:
-                st.session_state["dimension"] = float(o.smallest_dimension_cm.extracted_value)
-            if o.num_satellites:
-                st.session_state["num_auth"] = int(o.num_satellites.extracted_value)
-            if o.has_propulsion:
-                st.session_state["has_prop"] = bool(o.has_propulsion.extracted_value)
-            if o.estimated_deorbit_years:
-                st.session_state["deorbit_yrs"] = float(o.estimated_deorbit_years.extracted_value)
+            
+            def _safe_assign(field_obj, state_key, type_cast, min_val=None, max_val=None):
+                if not field_obj:
+                    return
+                # Only auto-accept high confidence (>= 85%)
+                if field_obj.confidence < 0.85:
+                    st.warning(f"⚠️ {state_key}: Extracted '{field_obj.extracted_value}' with low confidence ({field_obj.confidence*100:.0f}%). Ignored.")
+                    return
+                
+                try:
+                    val = type_cast(field_obj.extracted_value)
+                    # Physical sanity bounds
+                    if min_val is not None and val < min_val:
+                        st.warning(f"⚠️ {state_key}: {val} is physically implausible (min {min_val}). Ignored.")
+                        return
+                    if max_val is not None and val > max_val:
+                        st.warning(f"⚠️ {state_key}: {val} is physically implausible (max {max_val}). Ignored.")
+                        return
+                    st.session_state[state_key] = val
+                except ValueError:
+                    st.warning(f"⚠️ {state_key}: Could not parse '{field_obj.extracted_value}'. Ignored.")
 
-            st.success(f"Extracted {len(ext_result.all_fields)} fields (Confidence: {ext_result.confidence_score*100:.0f}%)")
+            _safe_assign(o.system_name, "name", str)
+            _safe_assign(o.altitude_km, "altitude", float, 100.0, 500000.0)
+            _safe_assign(o.inclination_deg, "inclination", float, 0.0, 180.0)
+            _safe_assign(o.mass_kg, "mass", float, 0.1, 50000.0)
+            _safe_assign(o.smallest_dimension_cm, "dimension", float, 1.0, 10000.0)
+            _safe_assign(o.num_satellites, "num_auth", int, 1, 100000)
+            
+            # Booleans
+            if o.has_propulsion and o.has_propulsion.confidence >= 0.85:
+                st.session_state["has_prop"] = bool(o.has_propulsion.extracted_value)
+            
+            _safe_assign(o.estimated_deorbit_years, "deorbit_yrs", float, 0.1, 100.0)
+
+            st.success(f"Extracted {len(ext_result.all_fields)} fields (Overall Confidence: {ext_result.confidence_score*100:.0f}%)")
         except Exception as e:
             st.error(f"Doc Intel Error: {e}")
 
@@ -243,12 +261,22 @@ with st.sidebar:
 
     defaults = REAL_PRESETS.get(selected_preset, REAL_PRESETS["Starlink Gen2 (SpaceX)"])
 
+    @st.cache_data(ttl=3600, show_spinner=False)
+    def get_live_telemetry_cached(identifier: str):
+        client = get_space_client()
+        return client.fetch_live_satellite_telemetry(identifier)
+        
+    @st.cache_data(ttl=3600, show_spinner=False)
+    def get_live_weather_cached():
+        client = get_space_client()
+        return client.fetch_live_space_weather()
+
     if fetch_live_btn and live_norad_input:
         with st.spinner("Connecting to CelesTrak GP & NOAA SWPC APIs..."):
             try:
                 space_client = get_space_client()
-                telem = space_client.fetch_live_satellite_telemetry(live_norad_input)
-                weather = space_client.fetch_live_space_weather()
+                telem = get_live_telemetry_cached(live_norad_input)
+                weather = get_live_weather_cached()
                 st.session_state["live_telem"] = telem
                 st.session_state["live_weather"] = weather
                 st.session_state["name"] = f"{telem.name} (NORAD #{telem.norad_cat_id})"
@@ -370,6 +398,12 @@ if run_btn:
 
     with st.spinner("Evaluating against FCC Part 100 & Running NASA DAS Physics Simulation..."):
         result = run_delta_audit(spec)
+        st.session_state["audit_result"] = result
+        st.session_state["audit_spec"] = spec
+
+if "audit_result" in st.session_state:
+    result = st.session_state["audit_result"]
+    spec = st.session_state["audit_spec"]
 
     st.success(f"✅ Audit Complete — Official Report ID: **{result.report_id}**")
 
@@ -713,23 +747,24 @@ if run_btn:
     with tab_pdf:
         st.subheader("📄 Export Law-Firm-Grade Audit PDF")
         st.markdown("Generate a McKinsey-formatted **CONFIDENTIAL — ATTORNEY WORK PRODUCT** audit package.")
+        
+        @st.cache_data(show_spinner=False)
+        def get_pdf_bytes(_res):
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                pdf_path = generate_delta_report(_res, tmp.name)
+            with open(pdf_path, "rb") as f:
+                return f.read()
 
-        if st.button("🖨️ Render Official Audit PDF", type="primary", use_container_width=True):
-            with st.spinner("Compiling HTML template and rendering PDF via WeasyPrint..."):
-                try:
-                    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-                        pdf_path = generate_delta_report(result, tmp.name)
-
-                    with open(pdf_path, "rb") as f:
-                        pdf_bytes = f.read()
-
-                    st.download_button(
-                        label=f"⬇️ Download Official Report ({len(pdf_bytes) / 1024:.1f} KB)",
-                        data=pdf_bytes,
-                        file_name=f"OrbitFlow_Part100_Audit_{result.report_id}.pdf",
-                        mime="application/pdf",
-                        use_container_width=True,
-                    )
-                    st.success("✅ Audit PDF generated successfully!")
-                except Exception as e:
-                    st.error(f"PDF Rendering Error: {e}")
+        with st.spinner("Compiling HTML template and rendering PDF via WeasyPrint..."):
+            try:
+                pdf_bytes = get_pdf_bytes(result)
+                st.download_button(
+                    label=f"⬇️ Download Official Report ({len(pdf_bytes) / 1024:.1f} KB)",
+                    data=pdf_bytes,
+                    file_name=f"OrbitFlow_Part100_Audit_{result.report_id}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
+                st.success("✅ Audit PDF ready for download!")
+            except Exception as e:
+                st.error(f"PDF Rendering Error: {e}")

@@ -295,11 +295,29 @@ class SpectrumEngine:
             summary_verdict=verdict,
         )
 
+    def _derive_spacecraft_class(self, spec: SatelliteSpec) -> str:
+        """Defense-in-depth classification of spacecraft type based on multiple parameters."""
+        if spec.orbit_type == OrbitType.GEO:
+            return "GEO_FSS"
+        
+        is_small = spec.mass_kg <= 20.0 or spec.smallest_dimension_cm <= 20.0
+        is_mega = spec.num_authorized > 100
+        
+        if is_small and not is_mega:
+            return "CUBESAT_LEO"
+        elif is_small and is_mega:
+            return "SMALLSAT_SWARM"  # e.g., Planet Flock
+        elif spec.mass_kg > 150.0 and is_mega:
+            return "MEGA_CONSTELLATION"  # e.g., Starlink, Kuiper
+        else:
+            return "GENERIC_NGSO"
+
     def _derive_default_channels(self, spec: SatelliteSpec) -> List[FrequencyChannelConfig]:
         """Derives realistic standard frequency channels matching spacecraft mission profile."""
         channels: List[FrequencyChannelConfig] = []
+        sat_class = self._derive_spacecraft_class(spec)
 
-        if spec.orbit_type == OrbitType.GEO:
+        if sat_class == "GEO_FSS":
             # GSO Commercial FSS payload
             channels.append(
                 FrequencyChannelConfig(
@@ -310,7 +328,7 @@ class SpectrumEngine:
                     bandwidth_mhz=500.0,
                     emission_designator="500MD7W",
                     max_eirp_dbw=55.0,
-                    max_eirp_density_dbw_mhz=-5.0,
+                    max_eirp_density_dbw_mhz=55.0 - 10 * math.log10(500.0),
                     peak_antenna_gain_dbi=38.0,
                 )
             )
@@ -326,7 +344,7 @@ class SpectrumEngine:
                     peak_antenna_gain_dbi=42.0,
                 )
             )
-        elif spec.smallest_dimension_cm <= 15.0 and spec.mass_kg <= 12.0:
+        elif sat_class in ["CUBESAT_LEO", "SMALLSAT_SWARM"]:
             # CubeSat / Smallsat TT&C / Payload
             channels.append(
                 FrequencyChannelConfig(
@@ -337,7 +355,7 @@ class SpectrumEngine:
                     bandwidth_mhz=0.5,
                     emission_designator="500KG1D",
                     max_eirp_dbw=10.0,
-                    max_eirp_density_dbw_mhz=-10.0,
+                    max_eirp_density_dbw_mhz=10.0 - 10 * math.log10(0.5),
                     peak_antenna_gain_dbi=3.0,
                 )
             )
@@ -350,12 +368,27 @@ class SpectrumEngine:
                     bandwidth_mhz=50.0,
                     emission_designator="50M0D7D",
                     max_eirp_dbw=25.0,
-                    max_eirp_density_dbw_mhz=-15.0,
+                    max_eirp_density_dbw_mhz=25.0 - 10 * math.log10(50.0),
                     peak_antenna_gain_dbi=18.0,
                 )
             )
-        else:
+        elif sat_class == "MEGA_CONSTELLATION":
             # NGSO Mega-Constellation (Ka-band / Ku-band broadband)
+            # Ku-band User Downlink
+            channels.append(
+                FrequencyChannelConfig(
+                    channel_id="CH-NGSO-DL-KU",
+                    direction=LinkDirection.TRANSMIT,
+                    band=FrequencyBand.KU_BAND,
+                    center_frequency_mhz=11700.0,
+                    bandwidth_mhz=250.0,
+                    emission_designator="250MD7W",
+                    max_eirp_dbw=23.0,  # Regulated state after spatial power back-off
+                    max_eirp_density_dbw_mhz=23.0 - 10 * math.log10(250.0),
+                    peak_antenna_gain_dbi=35.0,
+                )
+            )
+            # Ka-band Gateway Downlink
             channels.append(
                 FrequencyChannelConfig(
                     channel_id="CH-NGSO-DL-KA",
@@ -364,8 +397,8 @@ class SpectrumEngine:
                     center_frequency_mhz=19950.0,
                     bandwidth_mhz=500.0,
                     emission_designator="500MD7W",
-                    max_eirp_dbw=52.0,
-                    max_eirp_density_dbw_mhz=-15.0,
+                    max_eirp_dbw=23.0,  # Regulated state after spatial power back-off
+                    max_eirp_density_dbw_mhz=23.0 - 10 * math.log10(500.0),
                     peak_antenna_gain_dbi=36.0,
                 )
             )
@@ -381,6 +414,21 @@ class SpectrumEngine:
                     peak_antenna_gain_dbi=39.0,
                 )
             )
+        else:
+            # Generic NGSO (fallback to Ka-band)
+            channels.append(
+                FrequencyChannelConfig(
+                    channel_id="CH-NGSO-DL-KA",
+                    direction=LinkDirection.TRANSMIT,
+                    band=FrequencyBand.KA_BAND,
+                    center_frequency_mhz=19950.0,
+                    bandwidth_mhz=500.0,
+                    emission_designator="500MD7W",
+                    max_eirp_dbw=23.0,
+                    max_eirp_density_dbw_mhz=23.0 - 10 * math.log10(500.0),
+                    peak_antenna_gain_dbi=36.0,
+                )
+            )
 
         # Add shared Federal TT&C channel if flagged
         if spec.federal_bands_requested:
@@ -393,7 +441,7 @@ class SpectrumEngine:
                     bandwidth_mhz=2.0,
                     emission_designator="2M00G1D",
                     max_eirp_dbw=12.0,
-                    max_eirp_density_dbw_mhz=9.0,
+                    max_eirp_density_dbw_mhz=12.0 - 10 * math.log10(2.0),
                     peak_antenna_gain_dbi=6.0,
                     is_shared_federal_band=True,
                 )

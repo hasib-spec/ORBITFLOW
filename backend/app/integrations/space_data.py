@@ -26,6 +26,8 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from pydantic import BaseModel, Field
 
 from backend.app.core.config import get_logger
@@ -99,21 +101,35 @@ class SpaceDataClient:
     """Production client for real-time space data retrieval and telemetry parsing."""
 
     CELESTRAK_GP_URL = "https://celestrak.org/NORAD/elements/gp.php"
+    CELESTRAK_MIRROR_URL = "https://celestrak.com/NORAD/elements/gp.php"
     NOAA_SOLAR_FLUX_URL = "https://services.swpc.noaa.gov/json/f107_cm_flux.json"
     NOAA_KP_INDEX_URL = "https://services.swpc.noaa.gov/json/planetary_k_index_1m.json"
 
-    def __init__(self, timeout_seconds: int = 10) -> None:
-        self.timeout = timeout_seconds
+    def __init__(self, timeout_seconds: int = 30) -> None:
+        # Split connect/read timeouts per Reliability Engineer consensus
+        self.timeout = (3.05, timeout_seconds)
         self._session = requests.Session()
         self._session.headers.update({
-            "User-Agent": "OrbitFlow-Regulatory-Engine/0.1.0 (FAA/FCC Space Compliance)"
+            "User-Agent": "OrbitFlow-Regulatory-Engine/1.0.0 (FAA/FCC Space Compliance; contact@orbitflow.io)"
         })
+        # Production retry adapter: 3 retries, exponential backoff (1s, 2s, 4s)
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET"],
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self._session.mount("https://", adapter)
+        self._session.mount("http://", adapter)
 
     def fetch_live_satellite_telemetry(
         self, identifier: int | str
     ) -> LiveSatelliteTelemetry:
         """
         Fetch real-time ephemeris from CelesTrak GP API by NORAD ID or Name.
+
+        Uses automatic retry with exponential backoff and fallback mirror.
 
         Parameters
         ----------
@@ -133,17 +149,23 @@ class SpaceDataClient:
         else:
             params["NAME"] = str(identifier).strip()
 
-        try:
-            resp = self._session.get(
-                self.CELESTRAK_GP_URL,
-                params=params,
-                timeout=self.timeout,
-            )
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as err:
-            log.error("CelesTrak API request failed for %s: %s", identifier, err)
-            raise RuntimeError(f"Failed to fetch satellite telemetry from CelesTrak: {err}") from err
+        # Try primary URL, then fallback mirror
+        last_err: Exception | None = None
+        for url in [self.CELESTRAK_GP_URL, self.CELESTRAK_MIRROR_URL]:
+            try:
+                resp = self._session.get(url, params=params, timeout=self.timeout)
+                resp.raise_for_status()
+                data = resp.json()
+                if data and isinstance(data, list):
+                    return self._parse_omm(data[0])
+            except Exception as err:
+                log.warning("CelesTrak request to %s failed: %s — trying fallback", url, err)
+                last_err = err
+
+        log.error("All CelesTrak endpoints failed for %s: %s", identifier, last_err)
+        raise RuntimeError(
+            f"Failed to fetch satellite telemetry from CelesTrak after retries: {last_err}"
+        ) from last_err
 
         if not data or not isinstance(data, list):
             raise ValueError(f"No active satellite found on CelesTrak for identifier: {identifier}")
